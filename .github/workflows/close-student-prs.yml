@@ -1,0 +1,22 @@
+name: close pull requests from forks
+on:
+  pull_request_target:
+    types: [opened, reopened]
+permissions:
+  pull-requests: write
+jobs:
+  close:
+    if: github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request.number;
+            await github.rest.issues.createComment({...context.repo, issue_number: pr,
+              body: "ขอบคุณครับ 🙏 repository นี้เป็นต้นฉบับของรายวิชา จึงไม่รับ Pull Request จากนิสิต\n" +
+                    "กรุณาเก็บผลงานไว้ใน fork ของตนเอง (branch `results/<รหัสนิสิต>`) แล้วส่งลิงก์ตามที่ผู้สอนกำหนด\n" +
+                    "ถ้าพบข้อผิดพลาดในบทเรียน กรุณาเปิด Issue แทน\n\n" +
+                    "This is the course master repository; student pull requests are closed automatically. " +
+                    "Please keep your work in your own fork and open an Issue to report problems."});
+            await github.rest.pulls.update({...context.repo, pull_number: pr, state: "closed"});

@@ -1,0 +1,28 @@
+# Quality control and rain-rate estimators (C band)
+qc:
+  min_dbz: 5.0             # weaker echoes = no echo (0 mm)
+  min_rhohv: 0.85          # meteorological echo
+  min_range_km: 5.0        # ignore the first 5 km (ground clutter, receiver recovery)
+  speckle_fraction: 0.556  # >= 5 of 9 neighbours must be echo
+  clutter: {max_abs_velocity: 0.3, max_spectrum_width: 0.6, min_dbz: 35}
+  phase_texture_max_deg: 20     # PhiDP usable only where its texture is below this
+calibration:
+  zdr_light_rain_expected_db: 0.25   # intrinsic ZDR of light rain (20-28 dBZ)
+  light_rain_dbz: [20, 28]
+  light_rain_min_rhohv: 0.97
+kdp:
+  window_km: 6.0
+  n_iter: 10
+attenuation:
+  method: zphi
+  hail_cap_dbz: 55
+estimators:
+  zr_marshall_palmer: {a: 200.0, b: 1.6}     # Z = a R^b  (Marshall & Palmer 1948)
+  zr_rosenfeld:       {a: 250.0, b: 1.2}     # tropical convective (Rosenfeld et al. 1993)
+  r_kdp:              {c: 29.7, d: 0.85}     # R = c KDP^d   (C band, Py-ART table)
+  r_a:                {c: 250.0, d: 0.91}    # R = c A^d     (C band, Ryzhkov et al. 2014 type)
+blended:                 # simple decision tree for the dual-pol estimate
+  kdp_min_dbz: 40
+  kdp_min: 0.3           # deg/km
+  a_min_dbz: 25
+  a_min_phidp_span: 5.0  # deg along the ray

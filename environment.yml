@@ -1,0 +1,19 @@
+name: radteach
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - arm_pyart
+  - numpy
+  - scipy
+  - pandas
+  - matplotlib
+  - geopandas
+  - rasterio
+  - pyproj
+  - pyyaml
+  - requests
+  - opencv
+  - pysteps
+  - jupyterlab
+  - pytest

@@ -1,0 +1,19 @@
+# Course figure style (also applied by radteach.plotting.setup()). Use: plt.style.use("mapping/radteach.mplstyle")
+font.family: Sarabun, DejaVu Sans
+font.size: 10.8
+axes.titlesize: 11.3
+axes.labelsize: 10.8
+xtick.labelsize: 9.9
+ytick.labelsize: 9.9
+legend.fontsize: 9.7
+legend.frameon: False
+axes.linewidth: 0.6
+axes.unicode_minus: False
+xtick.major.width: 0.6
+ytick.major.width: 0.6
+savefig.dpi: 600
+savefig.bbox: tight
+savefig.pad_inches: 0.03
+pdf.fonttype: 42
+ps.fonttype: 42
+image.interpolation: nearest

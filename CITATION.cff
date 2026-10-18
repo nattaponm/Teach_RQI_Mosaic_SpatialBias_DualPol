@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this course material, please cite it as below."
+title: "Teach_RQI_Mosaic_SpatialBias_DualPol: weather-radar rainfall (RQI mosaics, dual-polarization QPE and spatial bias adjustment) — a Colab course with the Chiang Mai flood of October 2024"
+authors:
+  - alias: nattaponm        # TODO: replace with family-names / given-names / affiliation / orcid
+type: software
+version: 1.0.0
+date-released: 2026-10-18
+license: [MIT, CC-BY-4.0]
+repository-code: "https://github.com/nattaponm/Teach_RQI_Mosaic_SpatialBias_DualPol"
+keywords: [weather radar, dual polarization, radar quality index, mosaic, QPE, rain gauge, bias adjustment, Thailand, teaching]

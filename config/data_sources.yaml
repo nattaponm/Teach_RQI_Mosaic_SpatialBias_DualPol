@@ -1,0 +1,11 @@
+# Teaching data packages (GitHub Release assets). sha256 is checked after download.
+release_base: "https://github.com/nattaponm/Teach_RQI_Mosaic_SpatialBias_DualPol/releases/download/data-v1.0/"
+packages:
+  teaching_data:
+    file: teaching_data_v1.zip
+    sha256: 8230b0cfdf2b25b054bad47620c1fa50f3d6cc784789ddb534cbf8bc4fdc3465
+    contents: "radar UF (5 radars x 2 hours x 5 scans), SRTM DEM tiles 250 m"
+  products:
+    file: teaching_products_v1.zip
+    sha256: 4ea30678ceb2fed3901c5dd0c63d12050f17518e9c3a851f9729674bc5829b69
+    contents: "precomputed mosaics (LS/HYZ/PHY, RQI, VPR, advection) so any notebook can start alone"

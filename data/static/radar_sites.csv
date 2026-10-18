@@ -1,0 +1,6 @@
+radar,name,agency,lat,lon,alt_m,band,beamwidth_deg,elevations
+CRI,Chiang Rai,TMD,19.961471,99.881593,444,C,1.0,0.98;1.19
+LMP,Lamphun,TMD,18.566602,99.038728,328,C,1.0,1.59;2.39;3.39;4.30
+MHS,Mae Hong Son,TMD,19.298971,97.975777,280,C,1.0,3;4;6;8;11
+PHS,Phitsanulok,TMD,16.775408,100.217964,72,C,1.0,0.48;1.48
+TAK,Tak (Doi Musoe),TMD,16.751701,98.923559,943,C,0.98,0.5;1.19;2.5;4.0

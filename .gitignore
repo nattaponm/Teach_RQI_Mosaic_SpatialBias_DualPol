@@ -1,0 +1,17 @@
+# data downloaded or computed by the notebooks
+data/raw/
+data/interim/
+data/processed/
+# student outputs (saved to each student's own fork with colab.save_to_fork)
+outputs/**
+!outputs/**/
+!outputs/**/.gitkeep
+# python / jupyter
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.pytest_cache/
+# local build of release packages
+build/
+*.zip
+scripts/nbsrc/notebooks/

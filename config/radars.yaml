@@ -1,0 +1,11 @@
+# TMD C-band dual-polarisation radars used in the course (positions read from the UF headers).
+# zdr_offset_db / system_phase_deg are estimated in notebook 01 and may be overwritten there.
+earth_radius_factor: 1.3333        # 4/3 effective earth radius model
+radars:
+  CRI: {name: Chiang Rai,   lat: 19.961471, lon: 99.881593, alt_m: 444, beamwidth_deg: 1.0,  phidp_sign: -1}
+  LMP: {name: Lamphun,      lat: 18.566602, lon: 99.038728, alt_m: 328, beamwidth_deg: 1.0,  phidp_sign: -1}
+  MHS: {name: Mae Hong Son, lat: 19.298971, lon: 97.975777, alt_m: 280, beamwidth_deg: 1.0,  phidp_sign: 1}
+  PHS: {name: Phitsanulok,  lat: 16.775408, lon: 100.217964, alt_m: 72, beamwidth_deg: 1.0,  phidp_sign: -1}
+  TAK: {name: Tak (Doi Musoe), lat: 16.751701, lon: 98.923559, alt_m: 943, beamwidth_deg: 0.98, phidp_sign: 1}
+max_range_km: 240
+frequency_hz: 5.6e9

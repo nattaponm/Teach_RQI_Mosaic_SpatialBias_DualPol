@@ -1,0 +1,26 @@
+# Study area and analysis grid (geographic WGS84). Change values here, not in the code.
+name: "Upper Northern Thailand — Chiang Mai flood, 3 Oct 2024"
+crs_geographic: "EPSG:4326"
+crs_projected: "EPSG:32647"        # UTM zone 47N, for distances/areas in metres
+grid:
+  lon_min: 96.5
+  lon_max: 102.0
+  lat_min: 15.3
+  lat_max: 21.2
+  res_deg: 0.01                    # ~1.1 km
+map_extent:                        # default map window [lon0, lon1, lat0, lat1]
+  north: [96.8, 101.6, 15.4, 21.0]
+  ping_wang: [97.6, 100.6, 15.6, 20.0]
+  ping_headwater: [98.4, 99.65, 18.35, 19.95]
+basins_of_interest:                # ONWR main-basin codes
+  "01": Salawin
+  "02": North Khong
+  "06": Ping
+  "07": Wang
+  "08": Yom
+  "09": Nan
+ping_headwater_subbasins: ["0601", "0602", "0603", "0604", "0605", "0606"]   # above Chiang Mai city
+event:
+  date: "2024-10-03"
+  hours_utc: ["2024-10-03T00:00", "2024-10-03T10:00"]
+  note: "Second flood wave in Chiang Mai (P.1 record 5.3 m on 5 Oct 2024)"

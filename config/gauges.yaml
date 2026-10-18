@@ -1,0 +1,8 @@
+# HII (สสน.) hourly rain gauges — open data catalogue
+base_url: "https://tiservice.hii.or.th/opendata/data_catalog/hourly_rain/"
+timezone_offset_h: 7       # measure_datetime is Thai local time (UTC+7)
+time_stamp: end_of_hour    # 08:00 = rain from 07:00 to 08:00 local
+accept_flags: ["N"]
+max_rate_mm_h: 150
+stuck: {window_h: 12, frac_nonzero: 0.9, max_value: 0.6, max_std: 0.15}
+buddy: {min_mm: 10, radius_km: 20, min_neighbours: 3}

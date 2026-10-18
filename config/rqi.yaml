@@ -1,0 +1,21 @@
+# Radar quality index (after Zhang et al. 2012, MRMS) and hybrid-scan rules (Fulton et al. 1998)
+blockage:
+  cbb_full_quality: 0.1    # RQI_blk = 1 at CBB <= 0.1
+  cbb_zero_quality: 0.5    # RQI_blk = 0 at CBB >= 0.5 (Z-based estimators)
+  cbb_zero_quality_phase: 0.7  # phase-based estimators tolerate more blockage
+height:
+  h_ref_m: 1000.0          # no penalty for beams lower than 1 km above ground
+  h_scale_m: 1500.0        # gaussian decay scale
+hybrid_scan:
+  min_clearance_m: 150.0   # beam bottom must clear the terrain by 150 m
+melting_layer:
+  fallback_fzl_m: 4800.0
+  search_m: [3000, 6500]
+  rhohv_dip: 0.975
+  min_bottom_m: 3500.0
+vpr:
+  bin_m: 200
+  ref_layer_m: [500, 2000]
+  max_correction_db: 12
+mosaic:
+  method: weighted         # 'weighted' = sum(RQI*R)/sum(RQI); 'max' = take radar with highest RQI
