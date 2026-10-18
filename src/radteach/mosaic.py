@@ -89,7 +89,7 @@ def stack(radar, outs, keys, az_grid=AZ_GRID):
 
 def process_hour(scans: pd.DataFrame, terrain_fn, calib: pd.DataFrame, glon, glat, fzl_fallback=4800.0,
                  thr_z=0.5, thr_p=0.7, clearance=150.0, max_range=240e3, verbose=True, method="weighted",
-                 keep_radars=False):
+                 keep_radars=False, z_offset_db=None, cappi_m=2000.0, cappi_zr=(250.0, 1.2), cappi_pseudo=True, keep_sweeps=False):
     """Full v2 pipeline for one set of scans (normally 5 scans = one hour + the next :00 scan).
 
     scans : DataFrame from io.list_scans (radar, time, path)
@@ -99,6 +99,14 @@ def process_hour(scans: pd.DataFrame, terrain_fn, calib: pd.DataFrame, glon, gla
     keep_radars=True also returns the single-radar fields on the grid (for comparing mosaic methods, nb 09):
         radar_<product>  (n_radars × n_times × ny × nx) rain RATE (mm/h), NaN where the radar does not see the cell
         radar_rqi_<LS|HYZ|PHY> (n_radars × n_times × ny × nx) RQI of that radar,  radar_dist (n_radars × ny × nx) km
+        radar_CAPPI_RT   rain rate from a CAPPI at `cappi_m` m ASL with Z = 250 R^1.2 (Rosenfeld tropical), as in
+                         Mahavik et al. (2025, Spatial Information Research 33:6); quality radar_rqi_CAP = RQI_blk
+                         (pseudo-CAPPI by default: the lowest/highest sweep is used below/above the beams)
+    keep_sweeps=True also returns every sweep on the grid (inter-radar calibration, notebook 10):
+        radar_dbz_SW (n_radars × n_times × n_sweeps × ny × nx) attenuation-corrected Z, NaN = no echo
+        radar_hgt_SW, radar_cbb_SW (n_radars × n_sweeps × ny × nx) beam-centre height ASL (m) and CBB
+    z_offset_db : {radar: dB} subtracted from Z before any rain estimate (inter-radar calibration, notebook 10).
+                  Phase-based estimators (R(KDP)) are unaffected; R(A) from ZPHI only weakly.
     """
     t0 = _time.time()
     shape = (len(glat), len(glon))
@@ -119,6 +127,8 @@ def process_hour(scans: pd.DataFrame, terrain_fn, calib: pd.DataFrame, glon, gla
             outs = [QC.process_sweep(radar, k, c.zdr_offset_db, c.system_phase_deg, c.phidp_sign, fzl_fallback)[1]
                     for k in range(radar.nsweeps)]
             st = stack(radar, outs, ["Zc", "R_KDP", "R_A", "src", "RHOHV", "noecho", "tex"])
+            if z_offset_db:
+                st["Zc"] = st["Zc"] - float(z_offset_db.get(rad, 0.0))
             H = np.array([g["h"] for g in G]); C = np.array([g["cbb"] for g in G])
             cache[(t, rad)] = (st, key)
             r2d = np.broadcast_to(G[0]["r"][None, None, :], H.shape)
@@ -141,8 +151,13 @@ def process_hour(scans: pd.DataFrame, terrain_fn, calib: pd.DataFrame, glon, gla
     if keep_radars:
         nr, nt = len(radars), len(times)
         RF = {p: np.full((nr, nt) + shape, np.nan, "float32") for p in PRODUCTS}
-        RQf = {p: np.zeros((nr, nt) + shape, "float32") for p in ["LS", "HYZ", "PHY"]}
+        RQf = {p: np.zeros((nr, nt) + shape, "float32") for p in ["LS", "HYZ", "PHY", "CAP"]}
         RD = np.full((nr,) + shape, np.nan, "float32")
+        RF["CAPPI_RT"] = np.full((nr, nt) + shape, np.nan, "float32")
+    if keep_sweeps:
+        nr, nt, nsw = len(radars), len(times), 6
+        RZS = np.full((nr, nt, nsw) + shape, np.nan, "float32")
+        RHS = np.full((nr, nsw) + shape, np.nan, "float32"); RCS = np.full((nr, nsw) + shape, np.nan, "float32")
     for ti, t in enumerate(times):
         num = {p: np.zeros(shape) for p in PRODUCTS}; den = {p: np.zeros(shape) for p in PRODUCTS}
         qbest = {p: np.zeros(shape) for p in PRODUCTS}; vbest = {p: np.full(shape, np.nan) for p in PRODUCTS}
@@ -199,6 +214,13 @@ def process_hour(scans: pd.DataFrame, terrain_fn, calib: pd.DataFrame, glon, gla
                 for nm in Q:
                     RQf[nm][ri, ti] = np.nan_to_num(Q[nm])
                 RD[ri] = np.where(M.inside, M.dist / 1e3, np.nan)
+                r_cap, q_cap = cappi_rain(st["Zc"], noe, H, C, cappi_m, *cappi_zr, pseudo=cappi_pseudo)
+                RF["CAPPI_RT"][ri, ti] = M(r_cap); RQf["CAP"][ri, ti] = np.nan_to_num(M(q_cap, 0.0))
+            if keep_sweeps:
+                for k in range(min(H.shape[0], nsw)):
+                    RZS[ri, ti, k] = M(np.where(noe[k], np.nan, st["Zc"][k]))
+                    if not np.isfinite(RHS[ri, k]).any():
+                        RHS[ri, k] = M(H[k]); RCS[ri, k] = M(C[k])
         for p in PRODUCTS:
             rate = np.divide(num[p], den[p], out=np.full(shape, np.nan), where=den[p] > 0) if method == "weighted" else vbest[p]
             m15[p].append(rate * 0.25)                        # mm in 15 min (rate held constant)
@@ -214,16 +236,51 @@ def process_hour(scans: pd.DataFrame, terrain_fn, calib: pd.DataFrame, glon, gla
         out[f"rqi_{k}"] = rqi_max[k].astype("float32")
         out[f"best_{k}"] = best[k]
     if keep_radars:
-        for p in PRODUCTS:
+        for p in RF:
             out[f"radar_{p}"] = RF[p]
         for nm in RQf:
             out[f"radar_rqi_{nm}"] = RQf[nm]
         out["radar_dist"] = RD
+    if keep_sweeps:
+        out["radar_dbz_SW"] = RZS; out["radar_hgt_SW"] = RHS; out["radar_cbb_SW"] = RCS
     out["profile"] = prof.reset_index()
     out["diagnostics"] = pd.DataFrame(diag)
     if verbose:
         print(f"  done in {_time.time() - t0:.0f} s")
     return out
+
+
+def cappi_dbz(Z, noe, H, C, h_c=2000.0, pseudo=False):
+    """Reflectivity on a constant-altitude PPI at h_c m ASL: linear interpolation in dBZ between the two sweeps
+    that bracket h_c. pseudo=False: 'true' CAPPI, not valid below the lowest or above the highest beam;
+    pseudo=True: the lowest (highest) sweep is used where h_c is below (above) all beams.
+    Arrays (n_sweeps, n_az, n_gates). Returns (dBZ, valid, CBB of the more blocked bracket, no-echo in both)."""
+    pick = lambda A_, k: np.take_along_axis(A_, k, 0)[0]
+    order = np.argsort(np.nanmean(H, axis=(1, 2)))
+    Z, noe, H, C = Z[order], noe[order], H[order], C[order]
+    k = (H <= h_c).sum(0) - 1
+    valid = (k >= 0) & (k < H.shape[0] - 1)
+    if H.shape[0] == 1:
+        z = Z[0]; return z, np.ones_like(valid) if pseudo else np.zeros_like(valid), C[0], noe[0] > 0.5
+    kc = np.clip(k, 0, H.shape[0] - 2)[None]
+    h0, h1 = pick(H, kc), pick(H, kc + 1)
+    z0, z1 = pick(Z, kc), pick(Z, kc + 1)
+    w = np.clip((h_c - h0) / np.where(h1 > h0, h1 - h0, 1.0), 0, 1)
+    if pseudo:
+        valid = np.ones_like(valid)                      # w is clipped: 0 below the beams, 1 above
+    zi = np.where(np.isfinite(z0) & np.isfinite(z1), z0 * (1 - w) + z1 * w, np.where(np.isfinite(z0), z0, z1))
+    both_no = (pick(noe, kc) > 0.5) & (pick(noe, kc + 1) > 0.5)
+    return zi, valid, np.maximum(pick(C, kc), pick(C, kc + 1)), both_no
+
+
+def cappi_rain(Z, noe, H, C, h_c=2000.0, a=250.0, b=1.2, pseudo=True):
+    """Rain rate (mm/h) from a CAPPI at h_c m ASL with Z = a R^b (default Rosenfeld tropical, as in
+    Mahavik et al. 2025). Returns (rate, quality = RQI_blk of the more blocked bracketing sweep)."""
+    from .qpe import r_from_z
+    zi, valid, cbb, both_no = cappi_dbz(Z, noe, H, C, h_c, pseudo)
+    R = np.where(both_no, 0.0, r_from_z(zi, a=a, b=b))
+    R = np.where(valid, R, np.nan)
+    return R, np.where(valid, RQ.rqi_blockage(cbb), 0.0)
 
 
 COMBINE_METHODS = ["MAX", "MEAN", "NEAREST", "RQI_MAX", "RQI_WMEAN"]
@@ -265,7 +322,7 @@ def combine(R, Q=None, dist=None, method="RQI_WMEAN", k=1.0):
 
 def combine_hour(res, product="PHY_DP", method="RQI_WMEAN", k=1.0):
     """Hourly depth (mm) of a mosaic method from process_hour(..., keep_radars=True)."""
-    grp = {"LS_MP": "LS", "LS_DP": "LS", "HYZ_MP": "HYZ", "PHY_DP": "PHY"}[product]
+    grp = {"LS_MP": "LS", "LS_DP": "LS", "HYZ_MP": "HYZ", "PHY_DP": "PHY", "CAPPI_RT": "CAP"}[product]
     R, Q, D = res[f"radar_{product}"], res[f"radar_rqi_{grp}"], res["radar_dist"]
     m15 = np.array([combine(R[:, t], Q[:, t], D, method, k) * 0.25 for t in range(R.shape[1])])
     return hourly_from_15min(m15)

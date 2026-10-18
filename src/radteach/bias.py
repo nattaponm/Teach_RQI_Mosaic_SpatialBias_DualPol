@@ -120,7 +120,7 @@ def adjust_field(R, glon, glat, lon, lat, g_at, r_at, method="idw", **kw):
     return R * np.exp(surf), surf
 
 
-def loocv(points: pd.DataFrame, product: str, methods=("raw", "mfb", "idw"), **kw) -> pd.DataFrame:
+def loocv(points: pd.DataFrame, product: str, methods=("raw", "mfb", "idw"), mfb_background=True, **kw) -> pd.DataFrame:
     """points: one row per gauge (and hour) with lon, lat, G and the radar value `product` at the gauge.
     Returns the cross-validated adjusted value for every method (column names = methods)."""
     out = points[["station_code", "lon", "lat", "G", product]].copy()
@@ -142,7 +142,7 @@ def loocv(points: pd.DataFrame, product: str, methods=("raw", "mfb", "idw"), **k
             if "idw" in methods:
                 k = np.isfinite(rest.G) & np.isfinite(rest[product]) & ((rest.G >= 0.1) | (rest[product] >= 0.1))
                 b = idw(P.at[i, "lon"], P.at[i, "lat"], rest.lon[k], rest.lat[k],
-                        log_ratio(rest.G[k], rest[product][k]), background=np.log(F), **kw)[0]
+                        log_ratio(rest.G[k], rest[product][k]), background=np.log(F) if mfb_background else 0.0, **kw)[0]
                 out.at[i, "idw"] = (r_i + EPS) * np.exp(b) - EPS if r_i > 0 else 0.0
     for m in methods:
         out[m] = out[m].clip(lower=0)

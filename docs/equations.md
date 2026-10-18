@@ -21,3 +21,7 @@
 | 09 | MAX: $\max_i R_i$ · MEAN: $\tfrac1n\sum_i R_i$ · NEAREST: $R_{\arg\min_i d_i}$ | โมเสคแบบไม่ใช้คุณภาพ |
 | 09 | RQI_MAX: $R_{\arg\max_i \text{RQI}_i}$ · RQI_WMEAN: $\sum_i \text{RQI}_i^kR_i/\sum_i\text{RQI}_i^k$ | โมเสคตามคุณภาพ |
 | 09 | Seam index $=\operatorname{med}\lvert\Delta R\rvert_{\text{แนวเปลี่ยนเรดาร์}}/\operatorname{med}\lvert\Delta R\rvert_{\text{อื่น ๆ}}$ | ความต่อเนื่องเชิงพื้นที่ |
+| 10 | $\Delta Z_{ij}=c_i-c_j$, $\min\sum n_{ij}(\Delta Z_{ij}-c_i+c_j)^2$ s.t. $\sum c=0$ | ปรับเทียบ Z ระหว่างเรดาร์ (Gourley et al. 2003) |
+| 10 | $\Delta Z_{ab}+\Delta Z_{bc}+\Delta Z_{ca}\approx0$ | loop closure |
+| 10 | $R'=R\,10^{-c/(10b)}$ | ผลของ offset ต่อฝน Z–R |
+| 10 | $F_i=\overline{G}/\overline{R_i}$ (รายเรดาร์) vs $F=\sum G/\sum R$ (ทั้งโดเมน) | MFB |
