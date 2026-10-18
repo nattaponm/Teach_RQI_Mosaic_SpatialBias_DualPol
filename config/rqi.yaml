@@ -19,3 +19,6 @@ vpr:
   max_correction_db: 12
 mosaic:
   method: weighted         # 'weighted' = sum(RQI*R)/sum(RQI); 'max' = take radar with highest RQI
+  # notebook 09: radteach.mosaic.combine(R, Q, dist, method, k)
+  compare_methods: [MAX, MEAN, NEAREST, RQI_MAX, RQI_WMEAN]
+  rqi_power_k: 1.0         # RQI_WMEAN weight = RQI**k (k -> inf approaches RQI_MAX)

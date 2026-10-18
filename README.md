@@ -9,7 +9,7 @@
 
 <p align="center"><img src="docs/images/00_study_area_map.png" width="680" alt="พื้นที่ศึกษา: เรดาร์ 5 สถานีของกรมอุตุนิยมวิทยาและลุ่มน้ำภาคเหนือ"></p>
 
-ชุดบทเรียน Jupyter/Colab 9 บท สำหรับ **นิสิตปริญญาตรีปี 3–4 และปริญญาโท สาขาวิทยาศาสตร์สิ่งแวดล้อม/ภูมิศาสตร์/ทรัพยากรน้ำ**
+ชุดบทเรียน Jupyter/Colab 10 บท สำหรับ **นิสิตปริญญาตรีปี 3–4 และปริญญาโท สาขาวิทยาศาสตร์สิ่งแวดล้อม/ภูมิศาสตร์/ทรัพยากรน้ำ**
 เรียนตั้งแต่การอ่านข้อมูลเรดาร์ดิบ การควบคุมคุณภาพ การคำนวณการบังลำคลื่นจาก DEM การสร้างดัชนีคุณภาพเรดาร์ (RQI)
 การประมาณฝนด้วย Z–R และ dual-polarization การโมเสคเรดาร์หลายสถานี การแก้ VPR การดึงฝนสถานี สสน.
 การตรวจสอบความถูกต้อง ไปจนถึงการปรับแก้ความเอนเอียงเชิงพื้นที่ ทั้งหมดใช้ **ข้อมูลจริงของเหตุการณ์น้ำท่วมเชียงใหม่ 3 ตุลาคม 2567**
@@ -51,6 +51,7 @@
 | 06 | **ฝนสถานีโทรมาตร สสน.** | Open data API · `quality_flag` · ตรวจค่าค้าง/เพื่อนบ้าน · เวลาไทย → UTC (ปลายชั่วโมง) · ความพร้อมของข้อมูล | 🟢🔵 | 1.5 ชม. | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nattaponm/Teach_RQI_Mosaic_SpatialBias_DualPol/blob/main/notebooks/06_rain_gauges_hii.ipynb) |
 | 07 | **ตรวจสอบความถูกต้องและแปลผล** | จับคู่จุด-พิกเซล · PBIAS, RMSE, r, NSE, KGE, POD, FAR, CSI, HSS · แยกตามลุ่มน้ำ/RQI · bootstrap | 🟢🔵 | 2 ชม. | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nattaponm/Teach_RQI_Mosaic_SpatialBias_DualPol/blob/main/notebooks/07_verification_interpretation.ipynb) |
 | 08 | **ปรับแก้ความเอนเอียงเชิงพื้นที่ (spatial bias)** | Mean-field bias · log-ratio · IDW · LOOCV · Moran's I · 🔵 variogram/kriging · ถ่ายโอนค่าแก้ข้ามลุ่มน้ำ | 🟢🔵 | 2 ชม. | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nattaponm/Teach_RQI_Mosaic_SpatialBias_DualPol/blob/main/notebooks/08_spatial_bias_correction.ipynb) |
+| 09 | **เปรียบเทียบวิธีโมเสค: MAX / MEAN / NEAREST vs RQI** | 5 วิธีรวมเรดาร์ · คำนวณสดจาก UF · metrics บนคู่ข้อมูลชุดเดียวกัน · แยกตามจำนวนเรดาร์ที่ซ้อนทับ · bootstrap · seam index · ฝนรายลุ่ม · 🔵 RQI^k, MFB หลังโมเสค | 🟢🔵 | 2 ชม. | [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nattaponm/Teach_RQI_Mosaic_SpatialBias_DualPol/blob/main/notebooks/09_mosaic_methods_comparison.ipynb) |
 
 🟢 = แกนหลักสำหรับ ป.ตรี ปี 3–4 · 🔵 = ส่วนขยายสำหรับ ป.โท (แบบฝึกหัดและหัวข้อที่ทำเครื่องหมาย 🔵)
 
@@ -70,6 +71,8 @@ flowchart LR
     F --> H[07 ตรวจสอบความถูกต้อง]
     G --> H
     H --> I[08 ปรับแก้ spatial bias]
+    E --> J[09 เทียบวิธีโมเสค MAX/MEAN vs RQI]
+    H --> J
 ```
 ทุกบทเริ่มเรียนแยกกันได้ เพราะ notebook 00 ดาวน์โหลด **ผลลัพธ์สำเร็จรูป** ของบทก่อนหน้าไว้ให้แล้ว
 
@@ -94,6 +97,10 @@ flowchart LR
 <tr>
 <td><img src="docs/images/07_scatter_products.png" alt="เปรียบเทียบกับฝนสถานี"><br><sub>07 · เทียบฝนเรดาร์กับฝนสถานี</sub></td>
 <td><img src="docs/images/08_adjustment_maps_10UTC.png" alt="การปรับแก้เชิงพื้นที่"><br><sub>08 · การปรับแก้ความเอนเอียงเชิงพื้นที่</sub></td>
+</tr>
+<tr>
+<td><img src="docs/images/09_mosaic_methods_maps.png" alt="โมเสค 5 วิธี"><br><sub>09 · โมเสค 5 วิธี และจำนวนเรดาร์ที่ซ้อนทับ</sub></td>
+<td><img src="docs/images/09_metrics_by_overlap.png" alt="metrics แยกตามการซ้อนทับ"><br><sub>09 · metrics แยกตามจำนวนเรดาร์ที่ซ้อนทับ</sub></td>
 </tr>
 </table>
 
@@ -129,7 +136,7 @@ jupyter lab notebooks/
 
 ## 🗂️ โครงสร้าง repository
 ```
-├── notebooks/            บทเรียน 00–08 (ไม่มีผลลัพธ์ค้างไว้ เพื่อไม่ให้เห็นคำตอบก่อนทำ)
+├── notebooks/            บทเรียน 00–09 (ไม่มีผลลัพธ์ค้างไว้ เพื่อไม่ให้เห็นคำตอบก่อนทำ)
 ├── src/radteach/         โค้ดคำนวณที่ใช้ร่วมกัน (io, qc, geometry, dem, qpe, rqi, mosaic, vpr, accum, gauges, verify, bias, mapping, plotting, colab)
 ├── config/               พารามิเตอร์ทั้งหมด (.yaml) — เปลี่ยนค่าเพื่อทดลองได้โดยไม่ต้องแก้โค้ด
 ├── data/

@@ -44,3 +44,15 @@ def test_gauge_time_convention():
     df = pd.DataFrame({"station_code": ["X"], "time_lt": [pd.Timestamp("2024-10-03 08:00")], "rain": [1.0], "quality_flag": ["N"]})
     d = gauges.add_utc(df)
     assert d.start_utc.iloc[0] == pd.Timestamp("2024-10-03 00:00")
+
+
+def test_combine_methods():
+    from radteach import mosaic
+    R = np.array([[[1.0]], [[3.0]], [[np.nan]]])
+    Q = np.array([[[0.2]], [[0.6]], [[0.9]]])
+    D = np.array([[[50.0]], [[10.0]], [[5.0]]])
+    assert mosaic.combine(R, method="MAX")[0, 0] == 3
+    assert mosaic.combine(R, method="MEAN")[0, 0] == 2
+    assert mosaic.combine(R, dist=D, method="NEAREST")[0, 0] == 3       # radar 3 is closer but does not see the cell
+    assert mosaic.combine(R, Q, method="RQI_MAX")[0, 0] == 3
+    assert abs(mosaic.combine(R, Q, method="RQI_WMEAN")[0, 0] - (0.2 * 1 + 0.6 * 3) / 0.8) < 1e-12

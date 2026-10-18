@@ -11,7 +11,7 @@ Modules
     qpe       Z-R, R(KDP), R(A), blended dual-pol
     rqi       radar quality index
     vpr       melting layer and vertical profile of reflectivity
-    mosaic    hybrid scans, polar-to-grid, multi-radar mosaic
+    mosaic    hybrid scans, polar-to-grid, multi-radar mosaic, combine() for MAX/MEAN/NEAREST/RQI_MAX/RQI_WMEAN
     accum     15-min to hourly accumulation, advection correction
     gauges    HII hourly gauges: download, QC, time alignment
     verify    gauge-radar pairing and verification metrics

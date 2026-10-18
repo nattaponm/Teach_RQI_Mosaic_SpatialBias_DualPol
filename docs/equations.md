@@ -18,3 +18,6 @@
 | 07 | PBIAS, RMSE, NSE, KGE, POD, FAR, CSI, HSS | ดัชนีตรวจสอบ |
 | 08 | $F=\sum G/\sum R$; $b_i=\ln\frac{G_i+\varepsilon}{R_i+\varepsilon}$; $b(x)=\sum w_ib_i/\sum w_i$ | ปรับแก้ bias |
 | 08 | $I=\dfrac{n}{\sum w_{ij}}\dfrac{\sum_{ij}w_{ij}z_iz_j}{\sum z_i^2}$ | Moran's I |
+| 09 | MAX: $\max_i R_i$ · MEAN: $\tfrac1n\sum_i R_i$ · NEAREST: $R_{\arg\min_i d_i}$ | โมเสคแบบไม่ใช้คุณภาพ |
+| 09 | RQI_MAX: $R_{\arg\max_i \text{RQI}_i}$ · RQI_WMEAN: $\sum_i \text{RQI}_i^kR_i/\sum_i\text{RQI}_i^k$ | โมเสคตามคุณภาพ |
+| 09 | Seam index $=\operatorname{med}\lvert\Delta R\rvert_{\text{แนวเปลี่ยนเรดาร์}}/\operatorname{med}\lvert\Delta R\rvert_{\text{อื่น ๆ}}$ | ความต่อเนื่องเชิงพื้นที่ |

@@ -88,13 +88,17 @@ def stack(radar, outs, keys, az_grid=AZ_GRID):
 
 
 def process_hour(scans: pd.DataFrame, terrain_fn, calib: pd.DataFrame, glon, glat, fzl_fallback=4800.0,
-                 thr_z=0.5, thr_p=0.7, clearance=150.0, max_range=240e3, verbose=True, method="weighted"):
+                 thr_z=0.5, thr_p=0.7, clearance=150.0, max_range=240e3, verbose=True, method="weighted",
+                 keep_radars=False):
     """Full v2 pipeline for one set of scans (normally 5 scans = one hour + the next :00 scan).
 
     scans : DataFrame from io.list_scans (radar, time, path)
     calib : DataFrame from qc.calibrate (index = radar; zdr_offset_db, system_phase_deg, phidp_sign)
     Returns dict with 15-min depths m15_<product> (n_times × ny × nx, mm), hourly h_<product>,
     rqi_<LS|HYZ|PHY>, melting layer, VPR profile and per-radar diagnostics.
+    keep_radars=True also returns the single-radar fields on the grid (for comparing mosaic methods, nb 09):
+        radar_<product>  (n_radars × n_times × ny × nx) rain RATE (mm/h), NaN where the radar does not see the cell
+        radar_rqi_<LS|HYZ|PHY> (n_radars × n_times × ny × nx) RQI of that radar,  radar_dist (n_radars × ny × nx) km
     """
     t0 = _time.time()
     shape = (len(glat), len(glon))
@@ -134,7 +138,12 @@ def process_hour(scans: pd.DataFrame, terrain_fn, calib: pd.DataFrame, glon, gla
     best = {p: np.full(shape, -1, int) for p in ["LS", "HYZ", "PHY"]}
     diag = []
     pick = lambda A_, k: np.take_along_axis(A_, k, 0)[0]
-    for t in times:
+    if keep_radars:
+        nr, nt = len(radars), len(times)
+        RF = {p: np.full((nr, nt) + shape, np.nan, "float32") for p in PRODUCTS}
+        RQf = {p: np.zeros((nr, nt) + shape, "float32") for p in ["LS", "HYZ", "PHY"]}
+        RD = np.full((nr,) + shape, np.nan, "float32")
+    for ti, t in enumerate(times):
         num = {p: np.zeros(shape) for p in PRODUCTS}; den = {p: np.zeros(shape) for p in PRODUCTS}
         qbest = {p: np.zeros(shape) for p in PRODUCTS}; vbest = {p: np.full(shape, np.nan) for p in PRODUCTS}
         for ri, rad in enumerate(radars):
@@ -184,8 +193,14 @@ def process_hour(scans: pd.DataFrame, terrain_fn, calib: pd.DataFrame, glon, gla
             for nm in ["LS", "HYZ", "PHY"]:
                 q = np.nan_to_num(Q[nm]); b = q > rqi_max[nm]
                 rqi_max[nm][b] = q[b]; best[nm][b] = ri
+            if keep_radars:
+                for p in PRODUCTS:
+                    RF[p][ri, ti] = V[p]
+                for nm in Q:
+                    RQf[nm][ri, ti] = np.nan_to_num(Q[nm])
+                RD[ri] = np.where(M.inside, M.dist / 1e3, np.nan)
         for p in PRODUCTS:
-            rate = np.where(den[p] > 0, num[p] / np.maximum(den[p], 1e-9), np.nan) if method == "weighted" else vbest[p]
+            rate = np.divide(num[p], den[p], out=np.full(shape, np.nan), where=den[p] > 0) if method == "weighted" else vbest[p]
             m15[p].append(rate * 0.25)                        # mm in 15 min (rate held constant)
         if verbose:
             print(f"  pass 2 {pd.Timestamp(t):%H:%M}  ({_time.time() - t0:.0f} s)")
@@ -198,11 +213,62 @@ def process_hour(scans: pd.DataFrame, terrain_fn, calib: pd.DataFrame, glon, gla
     for k in rqi_max:
         out[f"rqi_{k}"] = rqi_max[k].astype("float32")
         out[f"best_{k}"] = best[k]
+    if keep_radars:
+        for p in PRODUCTS:
+            out[f"radar_{p}"] = RF[p]
+        for nm in RQf:
+            out[f"radar_rqi_{nm}"] = RQf[nm]
+        out["radar_dist"] = RD
     out["profile"] = prof.reset_index()
     out["diagnostics"] = pd.DataFrame(diag)
     if verbose:
         print(f"  done in {_time.time() - t0:.0f} s")
     return out
+
+
+COMBINE_METHODS = ["MAX", "MEAN", "NEAREST", "RQI_MAX", "RQI_WMEAN"]
+
+
+def combine(R, Q=None, dist=None, method="RQI_WMEAN", k=1.0):
+    """Combine single-radar fields R (n_radars × ny × nx; NaN = not seen) into one mosaic.
+
+    MAX        max_i R_i                         (any radar that sees the cell)
+    MEAN       mean_i R_i                        (any radar that sees the cell)
+    NEAREST    R of the radar closest to the cell (dist, km)
+    RQI_MAX    R of the radar with the highest RQI (RQI > 0)
+    RQI_WMEAN  Σ RQI_i^k R_i / Σ RQI_i^k        (RQI > 0; k = 1 is MRMS, k → ∞ tends to RQI_MAX)
+    The simple methods (MAX, MEAN, NEAREST) ignore quality on purpose: that is what we want to test.
+    """
+    R = np.asarray(R, float)
+    seen = np.isfinite(R)
+    nan = np.full(R.shape[1:], np.nan)
+    if method == "MAX":
+        with np.errstate(all="ignore"):
+            return np.where(seen.any(0), np.nanmax(np.where(seen, R, -np.inf), 0), nan)
+    if method == "MEAN":
+        n = seen.sum(0)
+        return np.where(n > 0, np.where(seen, R, 0).sum(0) / np.maximum(n, 1), nan)
+    if method == "NEAREST":
+        d = np.where(seen, np.nan_to_num(np.asarray(dist, float), nan=np.inf), np.inf)
+        i = np.argmin(d, 0)
+        return np.where(seen.any(0), np.take_along_axis(R, i[None], 0)[0], nan)
+    Q = np.where(seen, np.nan_to_num(np.asarray(Q, float)), 0.0)
+    if method == "RQI_MAX":
+        i = np.argmax(Q, 0)
+        return np.where(Q.max(0) > 0, np.take_along_axis(R, i[None], 0)[0], nan)
+    if method == "RQI_WMEAN":
+        w = np.where(Q > 0, Q ** k, 0.0)
+        sw = w.sum(0)
+        return np.divide((w * np.where(seen, R, 0)).sum(0), sw, out=nan, where=sw > 0)
+    raise ValueError(f"unknown method {method}")
+
+
+def combine_hour(res, product="PHY_DP", method="RQI_WMEAN", k=1.0):
+    """Hourly depth (mm) of a mosaic method from process_hour(..., keep_radars=True)."""
+    grp = {"LS_MP": "LS", "LS_DP": "LS", "HYZ_MP": "HYZ", "PHY_DP": "PHY"}[product]
+    R, Q, D = res[f"radar_{product}"], res[f"radar_rqi_{grp}"], res["radar_dist"]
+    m15 = np.array([combine(R[:, t], Q[:, t], D, method, k) * 0.25 for t in range(R.shape[1])])
+    return hourly_from_15min(m15)
 
 
 def hourly_from_15min(m15, min_valid=3):
