@@ -162,7 +162,7 @@ jupyter lab notebooks/
 | ข้อมูลเรดาร์ กรมอุตุนิยมวิทยา | ไฟล์ UF 2 ชั่วโมง (GitHub Release `data-v1.0`) | ใช้เพื่อการศึกษา อ้างอิงกรมอุตุนิยมวิทยา |
 | ฝนสถานี สสน. (HII) | open data catalogue | อ้างอิง สสน. |
 | ลุ่มน้ำ สทนช. | GeoPackage (simplify แล้ว) | อ้างอิง สทนช. |
-| SRTM v4.1 (CGIAR-CSI) | DEM 250 ม. | อ้างอิง Jarvis et al. (2008) |
+| SRTM v4.1 (CGIAR-CSI) | DEM 250 ม. | อ้างอิง Jarvis et al. (2008); การแจกจ่ายต่อต้องได้รับอนุญาตจาก CIAT (ดู DATA_LICENSE) |
 | ฟอนต์ Sarabun | `mapping/fonts` | SIL Open Font License 1.1 |
 
 รายละเอียด: [DATA_LICENSE.md](DATA_LICENSE.md) · โค้ด: [MIT](LICENSE) · เนื้อหา notebook/เอกสาร: [CC BY 4.0](LICENSE-CONTENT.md)

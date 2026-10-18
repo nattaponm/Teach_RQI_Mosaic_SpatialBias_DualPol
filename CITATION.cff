@@ -2,7 +2,11 @@ cff-version: 1.2.0
 message: "If you use this course material, please cite it as below."
 title: "Teach_RQI_Mosaic_SpatialBias_DualPol: weather-radar rainfall (RQI mosaics, dual-polarization QPE and spatial bias adjustment) — a Colab course with the Chiang Mai flood of October 2024"
 authors:
-  - alias: nattaponm        # TODO: replace with family-names / given-names / affiliation / orcid
+  - family-names: Mahavik
+    given-names: Nattapon
+    affiliation: "Naresuan University, Thailand"
+    email: nattaponm@nu.ac.th
+    alias: nattaponm
 type: software
 version: 1.0.0
 date-released: 2026-10-18
